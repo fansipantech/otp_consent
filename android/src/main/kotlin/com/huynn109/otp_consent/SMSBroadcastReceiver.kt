@@ -5,6 +5,8 @@ import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat.startActivityForResult
 import com.google.android.gms.auth.api.phone.SmsRetriever
 import com.google.android.gms.common.api.CommonStatusCodes
@@ -36,6 +38,10 @@ class SMSBroadcastReceiver : BroadcastReceiver() {
                     try {
                         // Start activity to show consent dialog to user, activity must be started in
                         // 5 minutes, otherwise you'll receive another TIMEOUT intent
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            consentIntent?.removeFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            consentIntent?.removeFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        }
                         activity?.startActivityForResult(consentIntent, SMS_CONSENT_REQUEST)
                         listener?.onShowPermissionDialog()
                     } catch (e: ActivityNotFoundException) {
