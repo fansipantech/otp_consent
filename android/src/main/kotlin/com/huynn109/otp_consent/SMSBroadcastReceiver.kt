@@ -1,13 +1,11 @@
 package com.huynn109.otp_consent
 
 import android.app.Activity
-import android.content.ActivityNotFoundException
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
+import android.content.*
+import android.content.ContentValues.TAG
+import android.content.Intent.*
 import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat.startActivityForResult
+import android.util.Log
 import com.google.android.gms.auth.api.phone.SmsRetriever
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.common.api.Status
@@ -38,12 +36,21 @@ class SMSBroadcastReceiver : BroadcastReceiver() {
                     try {
                         // Start activity to show consent dialog to user, activity must be started in
                         // 5 minutes, otherwise you'll receive another TIMEOUT intent
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            consentIntent?.removeFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            consentIntent?.removeFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        val intentName = consentIntent.resolveActivity(context.packageManager)
+
+                        Log.e(TAG, "onReceive: " + intentName.packageName + " " + intentName.className)
+
+                        if (intentName.packageName.equals("com.google.android.gms", ignoreCase = true) &&
+                                intentName.className.equals("com.google.android.gms.auth.api.phone.ui.UserConsentPromptActivity", ignoreCase = true)) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                consentIntent.removeFlags(FLAG_GRANT_READ_URI_PERMISSION)
+                                consentIntent.removeFlags(FLAG_GRANT_WRITE_URI_PERMISSION)
+                                consentIntent.removeFlags(FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                                consentIntent.removeFlags(FLAG_GRANT_PREFIX_URI_PERMISSION)
+                            }
+                            activity?.startActivityForResult(consentIntent, SMS_CONSENT_REQUEST)
+                            listener?.onShowPermissionDialog()
                         }
-                        activity?.startActivityForResult(consentIntent, SMS_CONSENT_REQUEST)
-                        listener?.onShowPermissionDialog()
                     } catch (e: ActivityNotFoundException) {
                         // Handle the exception ...
                     }
